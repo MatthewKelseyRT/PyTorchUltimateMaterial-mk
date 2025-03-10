@@ -8,12 +8,12 @@ from sklearn.preprocessing import StandardScaler
 
 # %% data prep
 # source: https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset
-df = pd.read_csv("heart.csv")
-df.head()
+heart_data = pd.read_csv("heart.csv")
+heart_data.head()
 
 # %% separate independent / dependent features
-X = np.array(df.loc[:, df.columns != "output"])
-y = np.array(df["output"])
+X = np.array(heart_data.loc[:, heart_data.columns != "output"])
+y = np.array(heart_data["output"])
 
 print(f"X: {X.shape}, y: {y.shape}")
 
@@ -28,31 +28,54 @@ X_test_scale = scaler.transform(X_test)
 
 # %% network class
 class NeuralNetworkFromScratch:
-    def __init__(self, LR, X_train, y_train, X_test, y_test):
+    def __init__(self, LR, X_train, y_train, X_test, y_test) -> None:
+        # LR is learning rate
+
+        # initialize weights and bias, start with random values
         self.w = np.random.randn(X_train.shape[1])
         self.b = np.random.randn()
+
         self.LR = LR
         self.X_train = X_train
         self.y_train = y_train
         self.X_test = X_test
         self.y_test = y_test
+
+        # losses
         self.L_train = []
         self.L_test = []
 
-    def activation(self, x):
-        # sigmoid in our case
+    def activation(self, x: float) -> float:
+        """
+        Sigmoid function
+
+        This function takes any real value as input and outputs values in the range of 0 to 1.
+        The larger the input (more positive), the closer the output value will be to 1.0,
+        whereas the smaller the input (more negative), the closer the output will be to 0.0
+        """
         return 1 / (1 + np.exp(-x))
 
-    def dactivation(self, x):
+    def dactivation(self, x: float) -> float:
         # derivative of sigmoid
         return self.activation(x) * (1 - self.activation(x))
 
     def forward(self, X):
+        """
+        Forward pass
+        Takes in all the internal parameter states in variable X
+        """
         hidden_1 = np.dot(X, self.w) + self.b
         activate_1 = self.activation(hidden_1)
         return activate_1
 
     def backward(self, X, y_true):
+        """
+        Backward pass
+        X is an input vector of independent variables
+        y_true is the true value of the dependent variable
+
+        We need to true values to calculate the losses
+        """
         # calc gradients
         hidden_1 = np.dot(X, self.w) + self.b
         y_pred = self.forward(X)
@@ -66,11 +89,11 @@ class NeuralNetworkFromScratch:
         return dL_db, dL_dw
 
     def optimizer(self, dL_db, dL_dw):
-        # update weights
+        # update biases and weights
         self.b = self.b - dL_db * self.LR
         self.w = self.w - dL_dw * self.LR
 
-    def train(self, ITERATIONS):
+    def train(self, ITERATIONS: int):
         for i in range(ITERATIONS):
             # random position
             random_pos = np.random.randint(len(self.X_train))
